@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> <!-- Menentukan karakter encoding dokumen sebagai UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Memastikan tampilan responsif di perangkat mobile -->
+    <title>Pemeriksa Bilangan Biner</title> <!-- Judul halaman -->
+    <link rel="stylesheet" href="style.css"> <!-- Menghubungkan file CSS eksternal -->
+</head>
+<body>
+    <div class="container"> <!-- Kontainer utama untuk semua elemen -->
+        <h1>Pemeriksa Bilangan Biner</h1> <!-- Judul aplikasi -->
+        <p>Masukkan bilangan biner untuk memeriksa apakah ganjil atau genap.</p> <!-- Instruksi pengguna -->
+        <input type="text" id="binaryInput" placeholder="Masukkan bilangan biner"> <!-- Input untuk bilangan biner -->
+        <button onclick="checkBinary()">Periksa</button> <!-- Tombol untuk memulai pemeriksaan -->
+        <div class="animation"> <!-- Div untuk animasi proses pemeriksaan -->
+            <div class="state" id="stateDisplay">State: q0</div> <!-- Menampilkan state awal (q0) -->
+            <div class="binary-process" id="binaryProcess"></div> <!-- Area untuk menampilkan proses bit -->
+        </div>
+        <div class="result" id="result"></div> <!-- Area untuk menampilkan hasil akhir -->
+    </div>
+
+    <script>
+        // Fungsi untuk membuat jeda (sleep) dalam animasi
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    
+        // Fungsi utama untuk memeriksa bilangan biner
+        async function checkBinary() {
+            const input = document.getElementById("binaryInput").value.trim(); // Mengambil input pengguna
+            const resultDiv = document.getElementById("result"); // Elemen untuk menampilkan hasil
+            const stateDisplay = document.getElementById("stateDisplay"); // Elemen state
+            const binaryProcess = document.getElementById("binaryProcess"); // Animasi proses
+    
+            // Reset hasil dan proses sebelumnya
+            resultDiv.textContent = "";
+            stateDisplay.textContent = "State: q0 (Start)"; // Reset state awal
+            stateDisplay.style.backgroundColor = "gray"; // Warna awal state
+            binaryProcess.innerHTML = "";
+    
+            // Validasi input: hanya menerima bilangan biner
+            if (!/^[01]+$/.test(input)) {
+                resultDiv.textContent = "Input tidak valid. Hanya menerima bilangan biner (0 dan 1).";
+                resultDiv.style.color = "red";
+                return;
+            }
+    
+            // Awal state
+            let currentState = "q0";
+    
+            // Tabel transisi (state, input, next state)
+            const transitions = [
+                { state: "q0", input: "0", nextState: "qGenap" },
+                { state: "q0", input: "1", nextState: "qGanjil" },
+                { state: "qGenap", input: "0", nextState: "qGenap" },
+                { state: "qGenap", input: "1", nextState: "qGanjil" },
+                { state: "qGanjil", input: "0", nextState: "qGenap" },
+                { state: "qGanjil", input: "1", nextState: "qGanjil" },
+            ];
+    
+            // Animasi untuk setiap bit
+            for (let i = 0; i < input.length; i++) {
+                const bit = input[i];
+    
+                // Cari transisi berdasarkan state saat ini dan input
+                const transition = transitions.find(t => t.state === currentState && t.input === bit);
+                if (transition) {
+                    // Tampilkan state saat ini
+                    stateDisplay.textContent = `State: ${transition.state}`;
+                    stateDisplay.style.backgroundColor =
+                        currentState === "q0"
+                            ? "gray"
+                            : currentState === "qGenap"
+                            ? "green"
+                            : "blue";
+    
+                    // Tampilkan proses bit
+                    const bitElement = document.createElement("div");
+                    bitElement.className = "bit";
+                    bitElement.textContent = bit;
+                    binaryProcess.appendChild(bitElement);
+    
+                    await sleep(500); // Jeda animasi
+    
+                    // Perbarui state
+                    currentState = transition.nextState;
+                    stateDisplay.textContent = `State: ${currentState}`;
+                    stateDisplay.style.backgroundColor =
+                        currentState === "qGenap" ? "green" : "blue";
+    
+                    await sleep(500); // Jeda animasi
+                } else {
+                    // Jika tidak ada transisi valid (tidak mungkin dalam desain ini)
+                    resultDiv.textContent = "Kesalahan transisi.";
+                    resultDiv.style.color = "red";
+                    return;
+                }
+            }
+    
+            // Hasil akhir setelah semua bit diproses
+            await sleep(500);
+            const result = currentState === "qGenap" ? "GENAP" : "GANJIL";
+            resultDiv.textContent = `Bilangan biner ${input} adalah ${result}.`;
+            resultDiv.style.color = currentState === "qGenap" ? "green" : "blue";
+        }
+    </script>
